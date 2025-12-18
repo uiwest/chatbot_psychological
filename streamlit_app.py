@@ -1,8 +1,7 @@
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("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"))
-
+client = OpenAI(api_key=os.getenv("sk-proj-lwJcDXg")
 SYSTEM_PROMPT = """
 너는 청소년을 위한 심리적 지원 챗봇이다.
 
