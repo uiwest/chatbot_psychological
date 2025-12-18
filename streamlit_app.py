@@ -1,56 +1,57 @@
-import streamlit as st
+setx OPENAI_API_KEY "sk-...o5UA"
+pip install openai
+import os
 from openai import OpenAI
 
-# Show title and description.
-st.title("💬 Chatbot")
-st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
-)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+SYSTEM_PROMPT = """
+너는 청소년을 위한 심리적 지원 챗봇이다.
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
+규칙:
+- 절대 진단하거나 치료하지 않는다
+- 공감과 감정 정리에 집중한다
+- 위험하거나 극단적인 선택을 묘사하거나 설명하지 않는다
+- 사용자가 매우 힘들어 보일 경우,
+  신뢰할 수 있는 어른(부모, 교사, 상담사)이나
+  전문 상담 도움을 받도록 부드럽게 권한다
+- 판단하지 말고, 따뜻하고 차분한 말투를 사용한다
+"""
 
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+def chat():
+    print("🧠 심리상담 챗봇입니다. (종료: '종료')")
 
-    # Display the existing chat messages via `st.chat_message`.
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT}
+    ]
 
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-    if prompt := st.chat_input("What is up?"):
+    while True:
+        user_input = input("너: ")
 
-        # Store and display the current prompt.
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        if user_input == "종료":
+            print("챗봇: 이야기해줘서 고마워. 언제든 다시 와도 돼 🙂")
+            break
 
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
+        messages.append({"role": "user", "content": user_input})
+
+        response = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=messages,
+            temperature=0.7
         )
 
-        # Stream the response to the chat using `st.write_stream`, then store it in 
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        reply = response.choices[0].message.content
+        print("챗봇:", reply)
+
+        messages.append({"role": "assistant", "content": reply})
+
+
+if __name__ == "__main__":
+    chat()
+
+
+
+
+
+
+python mental_chatbot.py
